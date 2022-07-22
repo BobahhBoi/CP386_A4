@@ -14,10 +14,41 @@ Version  2022-07-22
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
+    char user_command[20];
+    char* split_string;
 
+    //loop
+    while (true) {
+        
+        printf("allocator>");
+        scanf("%s", user_command);
+
+        split_string = strtok(user_command, " \n");
+
+        if (!strcmp(split_string,"RQ")){
+            
+        }
+
+        else if (!strcmp(split_string,"RL")){
+            
+        }
+
+        else if (!strcmp(split_string,"C")){
+            
+        }
+
+        else if (!strcmp(split_string,"Status")){
+            
+        }
+
+        else if (!strcmp(split_string,"Exit")){
+            break;
+        }
+    }
 
     //first fit
 
