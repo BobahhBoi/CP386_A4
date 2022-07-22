@@ -16,10 +16,24 @@ Version  2022-07-22
 #include <stdbool.h>
 #include <string.h>
 
+typedef struct Process
+{
+    char* name;
+    long startLocation;
+    long size;
+    struct Process* nextProcess;
+    struct Process* prevProcess;
+}Process;
+
+Process* firstProcess;
+int totalMemory;
+
 int main(int argc, char *argv[])
 {
     char user_command[20];
     char* split_string;
+
+    totalMemory = atoi(argv[1]);
 
     //loop
     while (true) {
