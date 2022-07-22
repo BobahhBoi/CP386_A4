@@ -25,8 +25,16 @@ typedef struct Process
     struct Process* prevProcess;
 }Process;
 
+//global variables
 Process* firstProcess;
 int totalMemory;
+
+//function headers
+void requestMemory();
+void releaseMemory();
+void compactMemory();
+void status();
+
 
 int main(int argc, char *argv[])
 {
@@ -44,19 +52,19 @@ int main(int argc, char *argv[])
         split_string = strtok(user_command, " \n");
 
         if (!strcmp(split_string,"RQ")){
-            
+            requestMemory();
         }
 
         else if (!strcmp(split_string,"RL")){
-            
+            releaseMemory();
         }
 
         else if (!strcmp(split_string,"C")){
-            
+            compactMemory();
         }
 
         else if (!strcmp(split_string,"Status")){
-            
+            status();
         }
 
         else if (!strcmp(split_string,"Exit")){
@@ -73,4 +81,17 @@ int main(int argc, char *argv[])
     //worst fit
     
     return 0;
+}
+
+void requestMemory() {
+
+}
+void releaseMemory() {
+
+}
+void compactMemory() {
+
+}
+void status() {
+
 }
