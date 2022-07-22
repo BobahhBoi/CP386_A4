@@ -22,7 +22,6 @@ typedef struct Process
     long startLocation;
     long size;
     struct Process* nextProcess;
-    struct Process* prevProcess;
 }Process;
 
 //global variables
@@ -91,15 +90,26 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void firstFit() {
-
+Process* firstFit(int size) {
+    long startPoint = 0;
+    Process* curr = firstProcess;
+    while (curr != NULL) {
+        if (curr->startLocation - startPoint >= size) {
+            break;
+        }
+        
+        startPoint = curr->startLocation + curr->size;
+        curr = curr->nextProcess;
+    }
+    
+    return curr;
 }
 
-void bestFit() {
+Process* bestFit(int size) {
     
 }
 
-void worstFit() {
+Process* worstFit(int size) {
     
 }
 
@@ -107,9 +117,38 @@ void worstFit() {
 void requestMemory(char* name, int size, char type) {
     printf("%s, %d, %c\n", name, size, type);
 
+    Process* curr;
     Process* newProcess = (Process*)malloc(sizeof(Process));
 
+    switch(type){
+    case 'F':
+        curr = firstFit(size);
+        break;
+    case 'B':
+        curr = bestFit(size);
+        break;
+    case 'W':
+        curr = worstFit(size);
+        break;
+
+    }
+
+    newProcess->size = size;
+    newProcess->name = name;
+    if (curr == NULL) {
+        newProcess->nextProcess = firstProcess;
+        firstProcess = newProcess;
+        newProcess->startLocation = 0;
+    }
+    else {
+        newProcess->nextProcess = curr->nextProcess;
+        curr->nextProcess = newProcess;
+
+        newProcess->startLocation = curr->startLocation + curr->size;
+
+    }
 }
+
 void releaseMemory() {
 
 }
