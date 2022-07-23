@@ -22,7 +22,20 @@ The makefile is used to help students test their code.
 When using the makefile, it will run the allocation.c file with the test case of ```1048576```
 
 ## Screenshots of output
+### Output of best fit:  
+![](https://cdn.discordapp.com/attachments/675206324086374400/1000238182794805248/allocator.png)  
+### Output of worst fit: (NOTE: Worst fit performed better than best fit by allocating memory to process P5)  
+![](https://cdn.discordapp.com/attachments/971437891622404218/1000241197085896774/unknown.png)  
 ## Contributions
+- main() - Alex
+- firstFit() - Tatiana
+- bestFit() - Tatiana
+- worstFit() - Tatiana
+- requestMemory() - Tatiana
+- releaseMemory() - Alex
+- compactMemory() - Alex
+- status() - Tatiana
+- error fixing - Alex
 ## About Developers
 - [Alex Lau](https://github.com/BobahhBoi)
 - [Tatiana Olenciuc](https://github.com/tygragamand)
