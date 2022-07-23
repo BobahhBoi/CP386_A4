@@ -21,15 +21,16 @@ typedef struct Process
     char* name;
     long startLocation;
     long size;
+    struct Process* prevProcess;
     struct Process* nextProcess;
 }Process;
 
 //global variables
 Process* firstProcess;
-int totalMemory;
+long totalMemory;
 
 //function headers
-void requestMemory(char* name, int size, char type);
+void requestMemory(char* name, long size, char type);
 void releaseMemory();
 void compactMemory();
 void status();
@@ -37,6 +38,8 @@ void status();
 
 int main(int argc, char *argv[])
 {
+    setbuf(stdout, NULL);
+
     char user_command[20];
     char* split_string;
 
@@ -51,12 +54,13 @@ int main(int argc, char *argv[])
 
         if (!strcmp(split_string,"RQ")){
             char* name;
-            int size; 
+            long size; 
             char type;
             
             split_string = strtok(NULL, " \n");
             //printf("%s\n",split_string);
-            name = split_string;
+            name = (char *) malloc(strlen(split_string));
+            strcpy(name, split_string);
 
             split_string = strtok(NULL, " \n");
             //printf("%s\n",split_string);
@@ -90,47 +94,72 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-Process* firstFit(int size) {
-    long startPoint = 0;
+//first fit
+int firstFit(long size, Process** process) {
+    //printf("FIRST FIT");
+    if (firstProcess == NULL || firstProcess->startLocation >= size) {
+        *process = NULL;
+        return 1;
+    }
+    
+    long holeStart = firstProcess->startLocation + firstProcess->size;
+    long holeEnd;
+    
     Process* curr = firstProcess;
     while (curr != NULL) {
-        if (curr->startLocation - startPoint >= size) {
-            break;
+        if (curr->nextProcess != NULL) {
+            holeEnd = firstProcess->nextProcess->startLocation;
+        } else {
+            holeEnd = totalMemory;
         }
         
-        startPoint = curr->startLocation + curr->size;
+        if (holeEnd - holeStart > size) {
+            *process = curr;
+            return 1;
+        }
+        
+        holeStart = curr->startLocation + curr->size;
         curr = curr->nextProcess;
     }
     
-    return curr;
+    // Failed to find enough memory
+    return 0;
 }
 
-Process* bestFit(int size) {
+//best fit
+int bestFit(long size, Process** process) {
     
 }
 
-Process* worstFit(int size) {
+//worst fit
+int worstFit(long size, Process** process) {
     
 }
 
 
-void requestMemory(char* name, int size, char type) {
-    printf("%s, %d, %c\n", name, size, type);
+//RQ
+void requestMemory(char* name, long size, char type) {
+    //printf("%s, %d, %c\n", name, size, type);
 
+    int success = 0;
     Process* curr;
     Process* newProcess = (Process*)malloc(sizeof(Process));
 
     switch(type){
     case 'F':
-        curr = firstFit(size);
+        success = firstFit(size, &curr);
         break;
     case 'B':
-        curr = bestFit(size);
+        success = bestFit(size, &curr);
         break;
     case 'W':
-        curr = worstFit(size);
+        success = worstFit(size, &curr);
         break;
-
+    }
+    
+    if (!success) {
+        printf("No hole of sufficient size");
+        return;
     }
 
     newProcess->size = size;
@@ -145,16 +174,73 @@ void requestMemory(char* name, int size, char type) {
         curr->nextProcess = newProcess;
 
         newProcess->startLocation = curr->startLocation + curr->size;
-
     }
 }
 
-void releaseMemory() {
-
+//RL
+void releaseMemory(char* name) {
+    
 }
+
+//C
 void compactMemory() {
 
 }
-void status() {
 
+//Status
+void status() {
+    long allocatedMemory = 0;
+    long freeMemory;
+    long endLocation;
+
+    //calculate allocated memory
+    Process* curr = firstProcess;
+
+    while (curr != NULL) {
+        allocatedMemory += curr->size;
+        curr = curr->nextProcess;
+    }
+    printf("Partitions [Allocated memory = %ld]:\n", allocatedMemory);
+
+    //print each allocated partition
+    curr = firstProcess;
+    while (curr != NULL) {
+        endLocation = curr->startLocation + curr->size - 1;
+        printf("Address [%ld:%ld] Process %s\n", curr->startLocation, endLocation, curr->name);
+
+        curr = curr->nextProcess;
+    }
+    printf("\n");
+
+    //calculate free memory
+    freeMemory = totalMemory - allocatedMemory;
+    printf("Holes [Free memory = %ld]\n", freeMemory);
+
+    //print each hole
+    long holeStart = 0;
+    long holeEnd;
+    long holeLen;
+    curr = firstProcess;
+
+    while (holeStart <= totalMemory) {
+        if (curr == NULL) {  //reached the end but still memory left
+            holeEnd = totalMemory;
+        }
+        else {  //curr exists
+            holeEnd = curr->startLocation - 1;
+        }
+        
+        holeLen = holeEnd - holeStart + 1;
+        if (holeEnd >= holeStart) {
+            printf("Address [%ld:%ld] len = %ld\n", holeStart, holeEnd, holeLen);
+        }
+
+        if (curr == NULL) {
+            break;
+        }
+
+        holeStart = curr->startLocation + curr->size;   
+        curr = curr->nextProcess; 
+          
+    }
 }
