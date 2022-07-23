@@ -26,12 +26,12 @@ typedef struct Process
 }Process;
 
 //global variables
-Process* firstProcess;
+Process* firstProcess = NULL;
 long totalMemory;
 
 //function headers
 void requestMemory(char* name, long size, char type);
-void releaseMemory();
+void releaseMemory(char* name);
 void compactMemory();
 void status();
 
@@ -75,7 +75,11 @@ int main(int argc, char *argv[])
         }
 
         else if (!strcmp(split_string,"RL")){
-            releaseMemory();
+            split_string = strtok(NULL, " \n");
+            char* name = (char *) malloc(strlen(split_string));
+
+            releaseMemory(name);
+            free(name);
         }
 
         else if (!strcmp(split_string,"C")){
@@ -128,12 +132,90 @@ int firstFit(long size, Process** process) {
 
 //best fit
 int bestFit(long size, Process** process) {
+    if (firstProcess == NULL) {
+        *process = NULL;
+        return 1;
+    }
     
+    Process* bestPrevProcess = NULL;
+    long bestHoleSize = firstProcess->startLocation;
+    if (bestHoleSize < size) {
+        bestHoleSize = -1;
+    }
+    
+    long holeStart = firstProcess->startLocation + firstProcess->size;
+    long holeEnd;
+    
+    Process* curr = firstProcess;
+    long currSize;
+    while (curr != NULL) {
+        if (curr->nextProcess != NULL) {
+            holeEnd = firstProcess->nextProcess->startLocation;
+        } else {
+            holeEnd = totalMemory;
+        }
+        
+        currSize = holeEnd - holeStart;
+        if (currSize > size && currSize < bestHoleSize) {
+            bestPrevProcess = curr;
+            bestHoleSize = currSize;
+        }
+        
+        holeStart = curr->startLocation + curr->size;
+        curr = curr->nextProcess;
+    }
+    
+    if (bestHoleSize != -1) {
+        *process = bestPrevProcess;
+        return 1;
+    } else {
+        // Failed to find enough memory
+        return 0;
+    }
 }
 
 //worst fit
 int worstFit(long size, Process** process) {
+    if (firstProcess == NULL) {
+        *process = NULL;
+        return 1;
+    }
     
+    Process* bestPrevProcess = NULL;
+    long bestHoleSize = firstProcess->startLocation;
+    if (bestHoleSize < size) {
+        bestHoleSize = -1;
+    }
+    
+    long holeStart = firstProcess->startLocation + firstProcess->size;
+    long holeEnd;
+    
+    Process* curr = firstProcess;
+    long currSize;
+    while (curr != NULL) {
+        if (curr->nextProcess != NULL) {
+            holeEnd = firstProcess->nextProcess->startLocation;
+        } else {
+            holeEnd = totalMemory;
+        }
+        
+        currSize = holeEnd - holeStart;
+        if (currSize > size && currSize > bestHoleSize) {
+            bestPrevProcess = curr;
+            bestHoleSize = currSize;
+        }
+        
+        holeStart = curr->startLocation + curr->size;
+        curr = curr->nextProcess;
+    }
+    
+    if (bestHoleSize != -1) {
+        *process = bestPrevProcess;
+        return 1;
+    } else {
+        // Failed to find enough memory
+        return 0;
+    }
 }
 
 
@@ -164,14 +246,25 @@ void requestMemory(char* name, long size, char type) {
 
     newProcess->size = size;
     newProcess->name = name;
-    if (curr == NULL) {
+    if (curr == NULL) { //add new process to the beginning
         newProcess->nextProcess = firstProcess;
-        firstProcess = newProcess;
+        newProcess->prevProcess = NULL;
+
+        if (firstProcess != NULL) {
+            firstProcess->prevProcess = newProcess;
+        }
+        
+        firstProcess = newProcess;  //update new first process
         newProcess->startLocation = 0;
     }
-    else {
-        newProcess->nextProcess = curr->nextProcess;
-        curr->nextProcess = newProcess;
+    else { //add to middle/end
+        newProcess->nextProcess = curr->nextProcess;            //update next process for new, including NULL
+        newProcess->prevProcess = curr;                         //update prev process for new
+        if (newProcess->nextProcess != NULL) { 
+            newProcess->nextProcess->prevProcess = newProcess;      //update prev process for next process
+        }
+
+        curr->nextProcess = newProcess;                         //update next process for prev process
 
         newProcess->startLocation = curr->startLocation + curr->size;
     }
@@ -179,32 +272,32 @@ void requestMemory(char* name, long size, char type) {
 
 //RL
 void releaseMemory(char* name) {
-    while (curr != NULL || curr-> name != name) {
+    Process* curr = firstProcess;
+
+    while (curr != NULL && strcmp(curr->name, name)) {
+        printf("Compared %s with %s\n", curr->name, name);
         curr = curr->nextProcess;
     }
 
     if (curr != NULL) {
         printf("Releasing memory for process %s", name);
 
-        if (curr == firstProcess && curr->nextProcess == NULL) { //the only one
-            firstProcess = NULL;
-        }
-        else if (curr == firstProcess) { //previous does not exist, next exists, deleting first
-            curr->nextProcess->prevProcess == NULL;
-            firstProcess = curr->nextProcess;
-        }
-
-        else if (curr->nextProcess == NULL) { //next does not exist, deleting last
-            curr->prevProcess->nextProcess == NULL;
-        }
-        else { //both prev and next exist
-            curr->prevProcess->nextProcess = curr->nextProcess;
+        if (curr->nextProcess != NULL) {
             curr->nextProcess->prevProcess = curr->prevProcess;
         }
 
+        if (curr == firstProcess) {
+            firstProcess = curr->nextProcess;
+        } 
+        else {
+            curr->prevProcess->nextProcess = curr->nextProcess;
+        }
+
+        free(curr);
     }
+
     else {
-        printf("There is no process with this name");
+        printf("There is no process with this name\n");
     }
 }
 
