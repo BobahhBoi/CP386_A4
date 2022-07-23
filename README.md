@@ -21,7 +21,7 @@ clean:
 The makefile is used to help students test their code.
 When using the makefile, it will run the allocation.c file with the test case of ```1048576```
 
-## Screenshots of output
+## Screenshots of outputs/test cases
 ### Output of best fit:  
 ![](https://cdn.discordapp.com/attachments/675206324086374400/1000238182794805248/allocator.png)  
 ### Output of worst fit: (NOTE: Worst fit performed better than best fit by allocating memory to process P5)  
