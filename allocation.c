@@ -179,12 +179,46 @@ void requestMemory(char* name, long size, char type) {
 
 //RL
 void releaseMemory(char* name) {
-    
+    while (curr != NULL || curr-> name != name) {
+        curr = curr->nextProcess;
+    }
+
+    if (curr != NULL) {
+        printf("Releasing memory for process %s", name);
+
+        if (curr == firstProcess && curr->nextProcess == NULL) { //the only one
+            firstProcess = NULL;
+        }
+        else if (curr == firstProcess) { //previous does not exist, next exists, deleting first
+            curr->nextProcess->prevProcess == NULL;
+            firstProcess = curr->nextProcess;
+        }
+
+        else if (curr->nextProcess == NULL) { //next does not exist, deleting last
+            curr->prevProcess->nextProcess == NULL;
+        }
+        else { //both prev and next exist
+            curr->prevProcess->nextProcess = curr->nextProcess;
+            curr->nextProcess->prevProcess = curr->prevProcess;
+        }
+
+    }
+    else {
+        printf("There is no process with this name");
+    }
 }
 
 //C
 void compactMemory() {
-
+    Process* curr = firstProcess;
+    long startLocation = 0;
+    while (curr != NULL) {
+        if (curr->startLocation > startLocation) {
+            curr->startLocation = startLocation;
+        }
+        
+        startLocation = curr->startLocation + curr->size;
+    }
 }
 
 //Status
