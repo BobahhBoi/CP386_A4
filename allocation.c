@@ -15,6 +15,7 @@ Version  2022-07-22
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <limits.h>
 
 typedef struct Process
 {
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
         else if (!strcmp(split_string,"RL")){
             split_string = strtok(NULL, " \n");
             char* name = (char *) malloc(strlen(split_string));
+            strcpy(name, split_string);
 
             releaseMemory(name);
             free(name);
@@ -140,7 +142,7 @@ int bestFit(long size, Process** process) {
     Process* bestPrevProcess = NULL;
     long bestHoleSize = firstProcess->startLocation;
     if (bestHoleSize < size) {
-        bestHoleSize = -1;
+        bestHoleSize = LONG_MAX;
     }
     
     long holeStart = firstProcess->startLocation + firstProcess->size;
@@ -150,22 +152,24 @@ int bestFit(long size, Process** process) {
     long currSize;
     while (curr != NULL) {
         if (curr->nextProcess != NULL) {
-            holeEnd = firstProcess->nextProcess->startLocation;
+            holeEnd = curr->nextProcess->startLocation;
         } else {
             holeEnd = totalMemory;
         }
         
         currSize = holeEnd - holeStart;
-        if (currSize > size && currSize < bestHoleSize) {
+        if (currSize >= size && currSize < bestHoleSize) {
             bestPrevProcess = curr;
             bestHoleSize = currSize;
         }
         
-        holeStart = curr->startLocation + curr->size;
         curr = curr->nextProcess;
+        if (curr != NULL) {
+            holeStart = curr->startLocation + curr->size;
+        }
     }
     
-    if (bestHoleSize != -1) {
+    if (bestHoleSize != LONG_MAX) {
         *process = bestPrevProcess;
         return 1;
     } else {
@@ -184,7 +188,7 @@ int worstFit(long size, Process** process) {
     Process* bestPrevProcess = NULL;
     long bestHoleSize = firstProcess->startLocation;
     if (bestHoleSize < size) {
-        bestHoleSize = -1;
+        bestHoleSize = LONG_MIN;
     }
     
     long holeStart = firstProcess->startLocation + firstProcess->size;
@@ -194,22 +198,24 @@ int worstFit(long size, Process** process) {
     long currSize;
     while (curr != NULL) {
         if (curr->nextProcess != NULL) {
-            holeEnd = firstProcess->nextProcess->startLocation;
+            holeEnd = curr->nextProcess->startLocation;
         } else {
             holeEnd = totalMemory;
         }
         
         currSize = holeEnd - holeStart;
-        if (currSize > size && currSize > bestHoleSize) {
+        if (currSize >= size && currSize > bestHoleSize) {
             bestPrevProcess = curr;
             bestHoleSize = currSize;
         }
         
-        holeStart = curr->startLocation + curr->size;
         curr = curr->nextProcess;
+        if (curr != NULL) {
+            holeStart = curr->startLocation + curr->size;
+        }
     }
     
-    if (bestHoleSize != -1) {
+    if (bestHoleSize != LONG_MIN) {
         *process = bestPrevProcess;
         return 1;
     } else {
@@ -240,7 +246,7 @@ void requestMemory(char* name, long size, char type) {
     }
     
     if (!success) {
-        printf("No hole of sufficient size");
+        printf("No hole of sufficient size\n");
         return;
     }
 
@@ -267,7 +273,10 @@ void requestMemory(char* name, long size, char type) {
         curr->nextProcess = newProcess;                         //update next process for prev process
 
         newProcess->startLocation = curr->startLocation + curr->size;
+
     }
+
+    printf("Successfully allocated %ld to process %s\n", size, name);
 }
 
 //RL
@@ -275,12 +284,11 @@ void releaseMemory(char* name) {
     Process* curr = firstProcess;
 
     while (curr != NULL && strcmp(curr->name, name)) {
-        printf("Compared %s with %s\n", curr->name, name);
         curr = curr->nextProcess;
     }
 
     if (curr != NULL) {
-        printf("Releasing memory for process %s", name);
+        printf("Releasing memory for process %s\n", name);
 
         if (curr->nextProcess != NULL) {
             curr->nextProcess->prevProcess = curr->prevProcess;
@@ -294,6 +302,7 @@ void releaseMemory(char* name) {
         }
 
         free(curr);
+        printf("Successfully released memory for process %s\n", name);
     }
 
     else {
@@ -311,7 +320,9 @@ void compactMemory() {
         }
         
         startLocation = curr->startLocation + curr->size;
+        curr = curr->nextProcess;
     }
+    printf("Compaction process is successful\n");
 }
 
 //Status
@@ -351,7 +362,7 @@ void status() {
 
     while (holeStart <= totalMemory) {
         if (curr == NULL) {  //reached the end but still memory left
-            holeEnd = totalMemory;
+            holeEnd = totalMemory - 1;
         }
         else {  //curr exists
             holeEnd = curr->startLocation - 1;
